@@ -193,7 +193,11 @@ end
 M.delete_buffers = function()
     local buffers = vim.api.nvim_list_bufs()
     for _, buffer_id in ipairs(buffers) do
-        vim.api.nvim_buf_delete(buffer_id, {})
+        local buffer_type =
+            vim.api.nvim_get_option_value("buftype", { buf = buffer_id })
+        if buffer_type == "" then
+            vim.api.nvim_buf_delete(buffer_id, {})
+        end
     end
 end
 
