@@ -8,7 +8,7 @@ M._default_options = {
     log_level = vim.log.levels.WARN,
     log_status = true,
     worktree_path = "..",
-    use_netrw = true,
+    switch_file_command = "Ex",
 }
 
 M.setup = function(opts)
@@ -148,7 +148,7 @@ M.switch_worktree = function(path)
         utils.update_current_buffer(
             found_path,
             before_git_path_info,
-            M._options.use_netrw
+            M._options.switch_file_command
         )
         status:info_nvim("Updating buffer")
 
@@ -194,7 +194,7 @@ M.remove_worktree = function(path)
 
             utils.delete_buffers()
 
-            utils.open_netrw_if_enabled(M._options.use_netrw)
+            utils.open_if_enabled(M._options.switch_file_command)
         end)
     end
 
