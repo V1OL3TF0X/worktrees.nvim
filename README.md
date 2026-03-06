@@ -35,7 +35,7 @@ require("worktrees").setup({
     log_level = <one of vim.log.levels> -- default: vim.log.levels.WARN,
     log_status = <boolean> -- default: true
     worktree_path = <string> -- default: ".."
-    use_netrw = <boolean> -- default: true
+    switch_file_command  = <string> -- default: Ex
 })
 ```
 
@@ -53,7 +53,7 @@ Path notes:
 - `~` is expanded.
 - Relative paths are resolved against current Neovim `cwd`.
 
-`use_netrw` controls whether to open netrw when switching worktrees or removing worktree and no buffer is available for use
+`switch_file_command` controls what command to use when switching worktrees or removing worktree and no buffer is available for use. Set to nil to disable
 
 ## Usage
 
