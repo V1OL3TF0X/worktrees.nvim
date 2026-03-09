@@ -117,6 +117,50 @@ or with lua
 :lua require("worktrees").remove_worktree()
 ```
 
+## Hooks
+
+You can provide hooks to perform additional actions on worktree addition, removal and switching
+```lua
+require('worktrees').setup {
+    hooks = {
+        on_add = function(name, path, branch)
+            -- your action here
+        end,
+        on_switch = function(from, to, git_path_info)
+            -- your action here
+        end,
+        on_remove = function(name)
+            -- your action here
+        end,
+    }
+}
+```
+
+### Example - switch all open buffers to new worktree
+
+```lua
+require('worktrees').setup {
+    swap_current_buffer = false,
+    hooks = {
+        on_switch = function(from, to)
+            local Path = require 'plenary.path'
+            for win in vim.iter(vim.api.nvim_list_tabpages()):map(vim.api.nvim_tabpage_list_wins):flatten() do
+                local bufnr = vim.api.nvim_win_get_buf(win)
+                local buf_path = Path:new(vim.api.nvim_buf_get_name(bufnr))
+                local rel_path = buf_path:make_relative(from)
+                local path_in_new_cwd = Path:new(to .. '/' .. rel_path)
+                if path_in_new_cwd:exists() then
+                    vim.schedule(function()
+                        local buf_in_new_cwd = vim.fn.bufnr(path_in_new_cwd:absolute(), true)
+                        vim.api.nvim_win_set_buf(win, buf_in_new_cwd)
+                    end)
+                end
+            end
+        end,
+    }
+}
+
+```
 ## Telescope
 
 The extension can be loaded with telescope
@@ -154,7 +198,6 @@ require("worktrees").setup({
     log_status = <boolean>, -- default true
 })
 ```
-
 
 ### Upstream setup
 

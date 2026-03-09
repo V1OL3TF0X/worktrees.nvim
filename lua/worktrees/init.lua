@@ -2,15 +2,33 @@ local jobs = require("worktrees.jobs")
 local utils = require("worktrees.utils")
 local status = require("worktrees.status")
 
-local M = {}
+---@class worktrees.Hooks
+---@field on_switch fun(from: string, to: string, git_path_info: worktrees.GitPathInfo)
+---@field on_add fun(name: string, path: string, branch: string)
+---@field on_remove fun(name: string)
+
+---@class worktrees.Options
+---@field hooks? worktrees.Hooks,
+---@field log_level? vim.log.levels,
+---@field worktree_path? string
+---@field switch_file_command? string
+---@field swap_current_buffer? boolean
+
+local M = {
+    --- @type worktrees.Options
+    _options = {},
+}
 
 M._default_options = {
     log_level = vim.log.levels.WARN,
     log_status = true,
     worktree_path = "..",
     switch_file_command = "Ex",
+    swap_current_buffer = true,
+    hooks = {},
 }
 
+---@param opts worktrees.Options
 M.setup = function(opts)
     local options = opts or {}
     M._options = vim.tbl_deep_extend("force", M._default_options, options)
@@ -86,6 +104,9 @@ M.new_worktree = function(existing_branch, branch_name)
         status:warn("Could not create worktree with arguments. Aborting...")
         return
     end
+    if M._options.hooks.on_add then
+        M._options.hooks.on_add(folder, relative_path, args[#args - 1])
+    end
 
     status:info_nvim("Worktree created")
 
@@ -145,15 +166,27 @@ M.switch_worktree = function(path)
         -- in the jumplist for accidental switching of worktrees
         vim.cmd("clearjumps")
 
-        utils.update_current_buffer(
-            found_path,
-            before_git_path_info,
-            M._options.switch_file_command
-        )
-        status:info_nvim("Updating buffer")
+        if M._options.swap_current_buffer then
+            utils.update_current_buffer(
+                found_path,
+                before_git_path_info,
+                M._options.switch_file_command
+            )
+            status:info_nvim("Updating buffer")
+        end
 
         -- Change neovim cwd
-        vim.cmd("cd " .. found_path)
+        if M._options.hooks.on_switch then
+            local prev_path = vim.loop.cwd() --[[@as string]]
+            vim.cmd("cd " .. found_path)
+            M._options.hooks.on_switch(
+                prev_path,
+                found_path,
+                before_git_path_info
+            )
+        else
+            vim.cmd("cd " .. found_path)
+        end
     end)
 end
 
@@ -211,7 +244,9 @@ M.remove_worktree = function(path)
         status:warn("Could not delete worktree with arguments. Aborting...")
         return
     end
-
+    if M._options.hooks.on_remove then
+        M._options.hooks.on_remove(found_path)
+    end
     status:info_nvim("Worktree removed")
 end
 

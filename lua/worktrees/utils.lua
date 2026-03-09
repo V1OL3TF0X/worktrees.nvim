@@ -19,6 +19,11 @@ M.str_to_boolean = function(str)
     return str == "true"
 end
 
+---@class worktrees.GitPathInfo
+---@field is_bare_repo boolean
+---@field toplevel_path? table plenary Path
+
+---@return worktrees.GitPathInfo?
 M.get_git_path_info = function()
     local git_info = {}
 
