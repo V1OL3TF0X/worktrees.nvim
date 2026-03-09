@@ -155,6 +155,7 @@ require('worktrees').setup {
                     vim.schedule(function()
                         local buf_in_new_cwd = vim.fn.bufnr(path_in_new_cwd:absolute(), true)
                         vim.api.nvim_win_set_buf(win, buf_in_new_cwd)
+                        vim.api.nvim_buf_delete(bufnr)
                     end)
                 else
                     vim.api.nvim_win_close(win, true)
